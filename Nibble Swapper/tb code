@@ -1,0 +1,57 @@
+`timescale 1ns / 1ps
+
+module nibble_swapper_tb;
+
+    reg clk = 0;
+    reg rst = 1;
+    reg [7:0] data_in;
+    reg swap_en;
+    wire [7:0] data_out;
+
+    // Instantiate the DUT
+    nibble_swapper uut (
+        .clk(clk),
+        .rst(rst),
+        .data_in(data_in),
+        .swap_en(swap_en),
+        .data_out(data_out)
+    );
+
+    // Clock generation
+    always #5 clk = ~clk;
+
+    // Test procedure
+    initial begin
+        $dumpfile("dump.vcd");
+        $dumpvars(0, nibble_swapper_tb);
+        $display("Time\tSwapEn\tDataIn\tDataOut");
+
+        #10 rst = 0;
+
+        // Apply input, swap enabled
+        apply_input(8'b11000011, 1);  // Expect 00111100
+        apply_input(8'b10101010, 1);  // Expect 10101010 (unchanged by swap)
+        apply_input(8'b11110000, 1);  // Expect 00001111
+
+        // Deassert swap, input changes — output must hold
+        apply_input(8'b00001111, 0);  // Output stays 00001111
+        apply_input(8'b00110011, 0);  // Output still 00001111
+
+        // Swap again
+        apply_input(8'b01011100, 1);  // Expect 11000101
+
+        #50 $finish;
+    end
+
+    // Helper task to apply test vectors
+    task apply_input(input [7:0] din, input swap);
+        begin
+            @(negedge clk);
+            data_in = din;
+            swap_en = swap;
+            @(posedge clk);
+            #1 $display("%0t\t%b\t%b\t%b", $time, swap, din, data_out);
+        end
+    endtask
+
+endmodule
