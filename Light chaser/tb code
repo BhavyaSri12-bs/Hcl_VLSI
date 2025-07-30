@@ -1,0 +1,47 @@
+`timescale 1ns/1ps
+module tb_light_chaser;
+
+    reg clk;
+    reg rst;
+    reg enable;
+    wire [7:0] leds;
+
+    // Instantiate DUT: 8 LEDs, shift every 3 cycles
+    light_chaser #(8, 3) dut (
+        .clk(clk),
+        .rst(rst),
+        .enable(enable),
+        .leds(leds)
+    );
+
+    // Clock: 10ns period
+    initial clk = 0;
+    always #5 clk = ~clk;
+
+    initial begin
+        $dumpfile("light_chaser.vcd");
+        $dumpvars(0, tb_light_chaser);
+
+        $monitor("Time=%0t | rst=%b | enable=%b | leds=%b", 
+                 $time, rst, enable, leds);
+
+        // Initial reset
+        rst = 1; enable = 0;
+        #15 rst = 0; enable = 1;
+
+        // Run for a while
+        #200;
+
+        // Pause rotation
+        enable = 0; #50;
+
+        // Resume rotation
+        enable = 1; #100;
+
+        // Reset again during run
+        rst = 1; #10; rst = 0; #100;
+
+        $finish;
+    end
+
+endmodule
