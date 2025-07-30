@@ -1,0 +1,60 @@
+
+   `timescale 1ns/1ps
+
+module RotatorUnit_tb;
+
+    reg clk;
+    reg reset;
+    reg dir;
+    reg [7:0] data_in;
+    wire [7:0] data_out;
+
+    // Instantiate the Design Under Test (DUT)
+    RotatorUnit uut (
+        .clk(clk),
+        .reset(reset),
+        .dir(dir),
+        .data_in(data_in),
+        .data_out(data_out)
+    );
+
+    // Clock generation: 10ns period
+    always #5 clk = ~clk;
+
+    initial begin
+        // Dump file for GTKWave
+        $dumpfile("rotator_unit.vcd");   // waveform dump file
+        $dumpvars(0, RotatorUnit_tb);    // dump all signals in testbench
+
+        // Initialize signals
+        clk = 0;
+        reset = 0;
+        dir = 0;
+        data_in = 8'b10110011;
+
+        // Apply reset
+        $display("Applying reset...");
+        reset = 1; #10;
+        reset = 0;
+
+        // Rotate Left for 4 cycles
+        dir = 0;
+        $display("Rotating Left...");
+        repeat(4) begin
+            #10;
+            $display("Time=%0t, Data_out=%b", $time, data_out);
+        end
+
+        // Rotate Right for 4 cycles
+        dir = 1;
+        $display("Rotating Right...");
+        repeat(4) begin
+            #10;
+            $display("Time=%0t, Data_out=%b", $time, data_out);
+        end
+
+        $display("Test complete!");
+        $finish;
+    end
+
+endmodule
