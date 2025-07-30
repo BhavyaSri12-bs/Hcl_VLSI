@@ -1,0 +1,29 @@
+`timescale 1ns/1ps
+module light_chaser #(
+    parameter WIDTH = 8,          // number of LEDs
+    parameter SLOWDOWN = 4        // how many clock cycles before shifting
+)(
+    input  wire clk,              // system clock
+    input  wire rst,              // asynchronous reset
+    input  wire enable,           // enable rotation
+    output reg [WIDTH-1:0] leds   // LED outputs
+);
+
+    reg [$clog2(SLOWDOWN)-1:0] counter;  // slowdown counter
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            leds    <= 1;   // start with only the rightmost LED ON
+            counter <= 0;
+        end else if (enable) begin
+            if (counter == SLOWDOWN-1) begin
+                counter <= 0;
+                // Rotate the LED pattern left
+                leds <= {leds[WIDTH-2:0], leds[WIDTH-1]};
+            end else begin
+                counter <= counter + 1;
+            end
+        end
+    end
+
+endmodule
