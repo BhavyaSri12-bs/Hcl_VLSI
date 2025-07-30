@@ -1,0 +1,52 @@
+`timescale 1ns / 1ps
+
+module even_odd_fsm_tb;
+
+    reg clk = 0;
+    reg rst = 1;
+    reg valid_in;
+    reg [7:0] data_in;
+    wire is_even;
+    wire is_odd;
+
+    even_odd_fsm uut (
+        .clk(clk),
+        .rst(rst),
+        .valid_in(valid_in),
+        .data_in(data_in),
+        .is_even(is_even),
+        .is_odd(is_odd)
+    );
+
+    // Clock generator
+    always #5 clk = ~clk;
+
+    initial begin
+        $dumpfile("dump.vcd");
+        $dumpvars(0, even_odd_fsm_tb);
+        $display("Time\tValid\tDataIn\tEven\tOdd");
+
+        #10 rst = 0;
+
+        test_input(8'd2, 1);   // Even
+        test_input(8'd7, 1);   // Odd
+        test_input(8'd10, 1);  // Even
+        test_input(8'd5, 1);   // Odd
+        test_input(8'd0, 0);   // No change (invalid input)
+        test_input(8'd4, 1);   // Even
+
+        #50 $finish;
+    end
+
+    task test_input(input [7:0] din, input vin);
+        begin
+            @(negedge clk);
+            data_in = din;
+            valid_in = vin;
+            @(posedge clk);
+            #1 $display("%0t\t%b\t%0d\t%b\t%b", $time, vin, din, is_even, is_odd);
+            valid_in = 0;
+        end
+    endtask
+
+endmodule
