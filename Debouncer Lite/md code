@@ -1,0 +1,34 @@
+`timescale 1ns/1ps
+module DebouncerLite #(
+    parameter STABLE_CYCLES = 3   // number of stable cycles needed
+)(
+    input  wire clk,              // system clock
+    input  wire rst,              // reset
+    input  wire noisy_in,         // noisy mechanical input
+    output reg  clean_out         // debounced output
+);
+
+    reg [2:0] counter;       // counts stable cycles
+    reg prev_in;             // previous sample of input
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            clean_out <= 0;
+            counter   <= 0;
+            prev_in   <= 0;
+        end 
+        else begin
+            if (noisy_in == prev_in) begin
+                if (counter < STABLE_CYCLES)
+                    counter <= counter + 1;
+                else
+                    clean_out <= noisy_in;   // update only after stable
+            end 
+            else begin
+                counter <= 0;                 // reset counter on change
+            end
+            prev_in <= noisy_in;
+        end
+    end
+
+endmodule
