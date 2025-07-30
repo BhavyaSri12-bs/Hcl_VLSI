@@ -1,0 +1,47 @@
+module pulse_tracer_tb;
+
+    reg clk = 0;
+    reg rst = 1;
+    reg noisy_in = 0;
+    wire pulse_out;
+
+    pulse_tracer uut (
+        .clk(clk),
+        .rst(rst),
+        .noisy_in(noisy_in),
+        .pulse_out(pulse_out)
+    );
+
+    // Clock generation
+    always #5 clk = ~clk;
+
+    initial begin
+        $dumpfile("dump.vcd");
+        $dumpvars(0, pulse_tracer_tb);  // Enable waveform dumping
+
+        $display("Time\tNoisyIn\tPulseOut");
+        $monitor("%0t\t%b\t%b", $time, noisy_in, pulse_out);
+
+        #10 rst = 0;
+
+        // Glitchy signals (should be ignored)
+        #10 noisy_in = 1; #10 noisy_in = 0;
+        #10 noisy_in = 1; #5  noisy_in = 0;
+        #10 noisy_in = 1; #5  noisy_in = 0;
+
+        // Stable high (should trigger pulse)
+        #10 noisy_in = 1;
+        #50 noisy_in = 1;
+        #10 noisy_in = 0;
+
+        // Another glitch
+        #10 noisy_in = 1; #5  noisy_in = 0;
+
+        // Another stable high
+        #10 noisy_in = 1;
+        #50 noisy_in = 1;
+        #10 noisy_in = 0;
+
+        #50 $finish;
+    end
+endmodule
