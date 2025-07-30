@@ -1,0 +1,36 @@
+`timescale 1ns / 1ps
+
+module even_odd_fsm (
+    input wire clk,
+    input wire rst,
+    input wire valid_in,
+    input wire [7:0] data_in,
+    output reg is_even,
+    output wire is_odd
+);
+
+    // FSM states: 0 = EVEN, 1 = ODD
+    localparam EVEN = 1'b0;
+    localparam ODD  = 1'b1;
+
+    reg state;
+
+    assign is_odd = ~is_even;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            state <= EVEN;
+            is_even <= 1;
+        end else if (valid_in) begin
+            if (data_in[0] == 1'b0) begin
+                state <= EVEN;
+                is_even <= 1;
+            end else begin
+                state <= ODD;
+                is_even <= 0;
+            end
+        end
+        // else: maintain current state and output
+    end
+
+endmodule
