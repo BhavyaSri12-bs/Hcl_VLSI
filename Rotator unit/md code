@@ -1,0 +1,23 @@
+// Rotator Unit: Rotates an 8-bit input left or right by one position 
+// depending on direction signal
+`timescale 1ns/1ps
+module RotatorUnit (
+    input clk,              // Clock input
+    input reset,            // Asynchronous reset
+    input dir,              // Direction: 0 = left, 1 = right
+    input [7:0] data_in,    // Initial input data
+    output reg [7:0] data_out // Rotated output
+);
+
+    always @(posedge clk or posedge reset) begin
+        if (reset) 
+            data_out <= data_in;   // Load initial data on reset
+        else begin
+            if (dir == 1'b0) // Rotate Left
+                data_out <= {data_out[6:0], data_out[7]};
+            else             // Rotate Right
+                data_out <= {data_out[0], data_out[7:1]};
+        end
+    end
+
+endmodule
