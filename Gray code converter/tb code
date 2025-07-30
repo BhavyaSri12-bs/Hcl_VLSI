@@ -1,0 +1,35 @@
+`timescale 1ns/1ps
+module tb_binary_to_gray;
+
+    reg  [3:0] bin;
+    wire [3:0] gray;
+
+    // Instantiate the DUT (Design Under Test)
+    binary_to_gray dut (
+        .bin(bin),
+        .gray(gray)
+    );
+
+    initial begin
+        // Generate waveform file
+        $dumpfile("gray_wave.vcd");
+        $dumpvars(0, tb_binary_to_gray);
+
+        $monitor("Time=%0t | Binary=%b | Gray=%b", $time, bin, gray);
+
+        // Apply test values
+        bin = 4'b0000; #10;
+        bin = 4'b0001; #10;
+        bin = 4'b0010; #10;
+        bin = 4'b0011; #10;
+        bin = 4'b0100; #10;
+        bin = 4'b0111; #10;
+        bin = 4'b1000; #10;
+        bin = 4'b1111; #10;
+
+        // Reapply same input (Gray must stay same)
+        bin = 4'b1111; #10;
+
+        $finish;
+    end
+endmodule
