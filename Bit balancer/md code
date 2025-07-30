@@ -1,0 +1,26 @@
+`timescale 1ns / 1ps
+module bit_balancer (
+    input wire clk,
+    input wire rst,
+    input wire [7:0] data_in,
+    input wire valid_in,         // Strobe signal to trigger a count
+    output reg [3:0] ones_count  // Max 8 ones → 4 bits enough
+);
+
+    integer i;
+    reg [3:0] temp_count;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            ones_count <= 0;
+        end else if (valid_in) begin
+            temp_count = 0;
+            for (i = 0; i < 8; i = i + 1) begin
+                if (data_in[i])
+                    temp_count = temp_count + 1;
+            end
+            ones_count <= temp_count;
+        end
+    end
+
+endmodule
