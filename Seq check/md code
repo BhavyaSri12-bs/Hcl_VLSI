@@ -1,0 +1,41 @@
+`timescale 1ns/1ps
+module seq_check (
+    input  wire clk,
+    input  wire rst,       // synchronous reset
+    input  wire in_sig,    // input signal to monitor
+    output reg  flag       // asserted when 3 rising edges in 5 cycles
+);
+
+    reg in_prev;
+    reg [4:0] edge_window;   // shift register: 1 = edge occurred in that cycle
+    integer edge_count;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            in_prev     <= 0;
+            edge_window <= 0;
+            edge_count  <= 0;
+            flag        <= 0;
+        end else begin
+            // Detect rising edge
+            if (in_sig & ~in_prev)
+                edge_window <= {edge_window[3:0], 1'b1};
+            else
+                edge_window <= {edge_window[3:0], 1'b0};
+
+            // Update count
+            edge_count <= edge_window[4] + edge_window[3] + 
+                          edge_window[2] + edge_window[1] + edge_window[0];
+
+            // Output flag: 1 cycle pulse
+            if (edge_count >= 3)
+                flag <= 1'b1;
+            else
+                flag <= 1'b0;
+
+            // Save previous input
+            in_prev <= in_sig;
+        end
+    end
+
+endmodule
