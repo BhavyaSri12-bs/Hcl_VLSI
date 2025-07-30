@@ -1,0 +1,85 @@
+`timescale 1ns/1ps
+
+// Top Module: pulse_tracer
+module pulse_tracer (
+    input wire clk,
+    input wire rst,
+    input wire noisy_in,
+    output wire pulse_out
+);
+
+    wire clean_signal;
+
+    // Glitch filter submodule
+    glitch_filter #(
+        .STABLE_CYCLES(3)
+    ) u_filter (
+        .clk(clk),
+        .rst(rst),
+        .noisy_in(noisy_in),
+        .clean_out(clean_signal)
+    );
+
+    // Edge detector submodule
+    edge_detector u_edge (
+        .clk(clk),
+        .rst(rst),
+        .signal_in(clean_signal),
+        .pulse_out(pulse_out)
+    );
+
+endmodule
+
+// Submodule: Glitch Filter
+module glitch_filter #(
+    parameter integer STABLE_CYCLES = 3
+)(
+    input wire clk,
+    input wire rst,
+    input wire noisy_in,
+    output reg clean_out
+);
+
+    reg [$clog2(STABLE_CYCLES+1)-1:0] counter = 0;
+    reg last_noisy_in = 0;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            counter <= 0;
+            clean_out <= 0;
+            last_noisy_in <= 0;
+        end else begin
+            if (noisy_in == last_noisy_in) begin
+                if (counter < STABLE_CYCLES)
+                    counter <= counter + 1;
+                if (counter == STABLE_CYCLES - 1)
+                    clean_out <= noisy_in;
+            end else begin
+                counter <= 0;
+            end
+            last_noisy_in <= noisy_in;
+        end
+    end
+endmodule
+
+// Submodule: Edge Detector
+module edge_detector (
+    input wire clk,
+    input wire rst,
+    input wire signal_in,
+    output reg pulse_out
+);
+
+    reg signal_in_d;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            signal_in_d <= 0;
+            pulse_out <= 0;
+        end else begin
+            pulse_out <= ~signal_in_d & signal_in; // Rising edge detection
+            signal_in_d <= signal_in;
+        end
+    end
+endmodule
+
