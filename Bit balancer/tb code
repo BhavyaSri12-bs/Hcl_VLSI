@@ -1,0 +1,54 @@
+`timescale 1ns/1ps
+
+module bit_balancer_tb;
+
+    reg clk = 0;
+    reg rst = 1;
+    reg [7:0] data_in;
+    reg valid_in;
+    wire [3:0] ones_count;
+
+    // DUT
+    bit_balancer uut (
+        .clk(clk),
+        .rst(rst),
+        .data_in(data_in),
+        .valid_in(valid_in),
+        .ones_count(ones_count)
+    );
+
+    // Clock generator
+    always #5 clk = ~clk;
+
+    initial begin
+        $dumpfile("dump.vcd");
+        $dumpvars(0, bit_balancer_tb);
+        $display("Time\tData\tValid\tCount");
+
+        // Reset
+        #10 rst = 0;
+
+        // Test cases
+        test_input(8'b00000000); // Expect 0
+        test_input(8'b11111111); // Expect 8
+        test_input(8'b10101010); // Expect 4
+        test_input(8'b11001100); // Expect 4
+        test_input(8'b10000001); // Expect 2
+        test_input(8'b00110011); // Expect 4
+
+        #50 $finish;
+    end
+
+    task test_input(input [7:0] val);
+        begin
+            @(negedge clk);
+            data_in = val;
+            valid_in = 1;
+            @(negedge clk);
+            valid_in = 0;
+            @(posedge clk);
+            $display("%0t\t%b\t%b\t%d", $time, val, 1'b1, ones_count);
+        end
+    endtask
+
+endmodule
